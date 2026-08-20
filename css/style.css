@@ -98,6 +98,29 @@ ul{ list-style:none; margin:0; padding:0; }
 }
 .nav a:hover{ color:var(--text); }
 .header-cta{ white-space:nowrap; }
+.header-social{
+  display:flex;
+  gap:10px;
+  flex-shrink:0;
+}
+.icon-link{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--surface);
+  border:1px solid var(--line);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:border-color .15s ease, color .15s ease;
+}
+.icon-link:hover{ border-color:var(--red); color:var(--red); }
+.icon-link svg{
+  width:18px;
+  height:18px;
+  fill:currentColor;
+}
 .nav-toggle{
   display:none;
   flex-direction:column;
@@ -485,6 +508,8 @@ ul{ list-style:none; margin:0; padding:0; }
   .nav.open{ display:flex; }
   .nav-toggle{ display:flex; }
   .header-cta{ display:none; }
+  .header-social{ gap:8px; }
+  .icon-link{ width:34px; height:34px; }
   .services-grid{ grid-template-columns:1fr; }
   .training-grid{ grid-template-columns:1fr; }
   .audience-grid{ grid-template-columns:1fr; }
