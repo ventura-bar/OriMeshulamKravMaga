@@ -78,11 +78,15 @@ ul{ list-style:none; margin:0; padding:0; }
   gap:16px;
 }
 .logo{
-  font-weight:800;
-  font-size:20px;
-  letter-spacing:.5px;
-  text-decoration:none;
-  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+}
+.logo img{
+  height:48px;
+  width:48px;
+  border-radius:50%;
+  object-fit:cover;
 }
 .nav{
   display:flex;
@@ -510,6 +514,7 @@ ul{ list-style:none; margin:0; padding:0; }
   .header-cta{ display:none; }
   .header-social{ gap:8px; }
   .icon-link{ width:34px; height:34px; }
+  .logo img{ height:40px; width:40px; }
   .services-grid{ grid-template-columns:1fr; }
   .training-grid{ grid-template-columns:1fr; }
   .audience-grid{ grid-template-columns:1fr; }
