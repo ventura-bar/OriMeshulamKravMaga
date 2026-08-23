@@ -374,6 +374,8 @@ ul{ list-style:none; margin:0; padding:0; }
 .gallery-frame{
   position:relative;
   margin-top:30px;
+  touch-action:pan-y;
+  user-select:none;
 }
 .gallery-viewport{
   width:100%;

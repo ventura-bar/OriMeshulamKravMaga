@@ -70,6 +70,7 @@ if (galleryTrack) {
   });
 
   const galleryViewport = galleryTrack.parentElement;
+  const galleryFrame = galleryViewport.parentElement;
 
   // Auto-advance one slide at a time; any manual move resets the countdown
   // so it doesn't fight the button/swipe the visitor just used.
@@ -89,22 +90,26 @@ if (galleryTrack) {
   renderGallery(0);
   resetAutoplay();
 
-  // Swipe / drag to move between images (mouse + touch + iPhone Safari)
+  // Swipe / drag to move between images (mouse + touch + iPhone Safari).
+  // Listens on the whole frame, not just the viewport: the prev/next
+  // buttons float on top of the image edges (siblings, not descendants
+  // of the viewport), which is exactly where a thumb naturally starts a
+  // swipe -- a viewport-only listener would miss those touches entirely.
   let dragStartX = null;
   const swipeThreshold = 40;
 
-  galleryViewport.addEventListener('pointerdown', (e) => {
+  galleryFrame.addEventListener('pointerdown', (e) => {
     dragStartX = e.clientX;
-    galleryViewport.setPointerCapture(e.pointerId);
+    galleryFrame.setPointerCapture(e.pointerId);
   });
-  galleryViewport.addEventListener('pointerup', (e) => {
+  galleryFrame.addEventListener('pointerup', (e) => {
     if (dragStartX === null) return;
     const dx = e.clientX - dragStartX;
     dragStartX = null;
     if (dx > swipeThreshold) { renderGallery(galleryIndex - 1); resetAutoplay(); }
     else if (dx < -swipeThreshold) { renderGallery(galleryIndex + 1); resetAutoplay(); }
   });
-  galleryViewport.addEventListener('pointercancel', () => { dragStartX = null; });
+  galleryFrame.addEventListener('pointercancel', () => { dragStartX = null; });
 }
 
 // Reviews: auto-scrolls on its own, but can also be dragged/swiped by hand.
