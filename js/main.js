@@ -35,7 +35,10 @@ let galleryIndex = 0;
 
 function renderGallery(index) {
   galleryIndex = (index + galleryImages.length) % galleryImages.length;
-  galleryTrack.style.transform = `translateX(${-galleryIndex * 100}%)`;
+  // RTL flex row lays child 0 at the right (matching the viewport) and each
+  // next child further left, so bringing slide N into view means shifting
+  // the track right (positive), not left, unlike the equivalent LTR case.
+  galleryTrack.style.transform = `translateX(${galleryIndex * 100}%)`;
 
   galleryThumbs.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
     thumb.classList.toggle('active', i === galleryIndex);
