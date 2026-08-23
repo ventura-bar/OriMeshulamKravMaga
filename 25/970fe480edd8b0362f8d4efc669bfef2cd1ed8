@@ -1,0 +1,34 @@
+index.html
+  s_bf9e5adfb413f2::t_ba6ec4c8671a5e 110,118,126
+  s_bf9e5adfb413f2::t_31d518fb5d9222 144-145
+  s_bf9e5adfb413f2::t_453eb9bae2f60e 33,241
+  h_8b62cf3430f0da 7
+css/style.css
+  s_bf9e5adfb413f2::t_e6139ed15cb87e 403,406,408-409,414-417
+  s_bf9e5adfb413f2::t_7cfda15122217e 342,344,347,353-357
+  s_bf9e5adfb413f2::t_1caf07ee28b96b 358,381,385-386,391-402,404-405,407,410-413,418-423
+js/main.js
+  s_bf9e5adfb413f2::t_f6fd34ae374ae1 29,38,40-50,55,62-64,66,69-70,93,95,97,104
+  s_bf9e5adfb413f2::t_e99a8ae3d37f3b 57-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "25970fe480edd8b0362f8d4efc669bfef2cd1ed8",
+  "prompts": {},
+  "humans": {
+    "h_8b62cf3430f0da": {
+      "author": "Bar Ventura <bar090402@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_bf9e5adfb413f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9978e3f6-196f-4834-bd1a-ad3afd499299",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Bar Ventura <bar090402@gmail.com>"
+    }
+  }
+}
