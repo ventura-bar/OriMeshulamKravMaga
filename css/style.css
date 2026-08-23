@@ -331,9 +331,25 @@ ul{ list-style:none; margin:0; padding:0; }
 }
 .service-card{
   background:var(--surface);
-  border-inline-start:4px solid var(--red);
+  border:1px solid var(--line);
+  border-top:3px solid var(--red);
   border-radius:var(--radius-sm);
-  padding:28px 22px;
+  overflow:hidden;
+}
+.service-card-image{
+  aspect-ratio:4/3;
+  background:var(--surface-2);
+  border-bottom:1px dashed var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  padding:16px;
+}
+.service-card-body{
+  padding:22px 20px;
 }
 .service-card h3{
   font-size:17px;
@@ -344,6 +360,7 @@ ul{ list-style:none; margin:0; padding:0; }
   font-size:14px;
   margin:0;
 }
+.service-card p + p{ margin-top:6px; }
 
 /* ---------- Gallery ---------- */
 .gallery-frame{

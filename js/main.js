@@ -56,12 +56,23 @@ function renderGallery(index) {
 }
 
 if (galleryMain) {
-  galleryPrev.addEventListener('click', () => renderGallery(galleryIndex - 1));
-  galleryNext.addEventListener('click', () => renderGallery(galleryIndex + 1));
+  // Auto-advance one slide at a time; any manual move resets the countdown
+  // so it doesn't fight the button/swipe the visitor just used.
+  const autoplayDelay = 4000;
+  let autoplayTimer = null;
+
+  function resetAutoplay() {
+    if (autoplayTimer) clearInterval(autoplayTimer);
+    autoplayTimer = setInterval(() => renderGallery(galleryIndex + 1), autoplayDelay);
+  }
+
+  galleryPrev.addEventListener('click', () => { renderGallery(galleryIndex - 1); resetAutoplay(); });
+  galleryNext.addEventListener('click', () => { renderGallery(galleryIndex + 1); resetAutoplay(); });
   galleryThumbs.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
-    thumb.addEventListener('click', () => renderGallery(i));
+    thumb.addEventListener('click', () => { renderGallery(i); resetAutoplay(); });
   });
   renderGallery(0);
+  resetAutoplay();
 
   // Swipe / drag to move between images (mouse + touch + iPhone Safari)
   let dragStartX = null;
@@ -75,8 +86,8 @@ if (galleryMain) {
     if (dragStartX === null) return;
     const dx = e.clientX - dragStartX;
     dragStartX = null;
-    if (dx > swipeThreshold) renderGallery(galleryIndex - 1);
-    else if (dx < -swipeThreshold) renderGallery(galleryIndex + 1);
+    if (dx > swipeThreshold) { renderGallery(galleryIndex - 1); resetAutoplay(); }
+    else if (dx < -swipeThreshold) { renderGallery(galleryIndex + 1); resetAutoplay(); }
   });
   galleryMain.addEventListener('pointercancel', () => { dragStartX = null; });
 }
