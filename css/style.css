@@ -377,8 +377,10 @@ ul{ list-style:none; margin:0; padding:0; }
   cursor:grab;
   touch-action:pan-y;
   user-select:none;
+  transition:opacity .2s ease;
 }
 .gallery-main:active{ cursor:grabbing; }
+.gallery-main.fading{ opacity:0; }
 .photo-placeholder.wide{ aspect-ratio:16/9; }
 .gallery-nav{
   flex-shrink:0;

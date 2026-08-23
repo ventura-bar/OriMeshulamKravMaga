@@ -38,17 +38,22 @@ function renderGallery(index) {
   galleryIndex = (index + galleryImages.length) % galleryImages.length;
   const image = galleryImages[galleryIndex];
 
-  galleryMain.querySelector('img')?.remove();
-  if (image.src) {
-    const img = document.createElement('img');
-    img.src = image.src;
-    img.alt = image.label;
-    galleryMainLabel.style.display = 'none';
-    galleryMain.prepend(img);
-  } else {
-    galleryMainLabel.textContent = image.label;
-    galleryMainLabel.style.display = '';
-  }
+  // Quick fade so the change is obvious even with placeholder text
+  galleryMain.classList.add('fading');
+  setTimeout(() => {
+    galleryMain.querySelector('img')?.remove();
+    if (image.src) {
+      const img = document.createElement('img');
+      img.src = image.src;
+      img.alt = image.label;
+      galleryMainLabel.style.display = 'none';
+      galleryMain.prepend(img);
+    } else {
+      galleryMainLabel.textContent = image.label;
+      galleryMainLabel.style.display = '';
+    }
+    galleryMain.classList.remove('fading');
+  }, 180);
 
   galleryThumbs.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
     thumb.classList.toggle('active', i === galleryIndex);
