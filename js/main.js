@@ -26,8 +26,7 @@ const galleryImages = [
   { label: '** תמונת אימון 6 **', src: null },
 ];
 
-const galleryMain = document.getElementById('galleryMain');
-const galleryMainLabel = document.getElementById('galleryMainLabel');
+const galleryTrack = document.getElementById('galleryTrack');
 const galleryThumbs = document.getElementById('galleryThumbs');
 const galleryPrev = document.getElementById('galleryPrev');
 const galleryNext = document.getElementById('galleryNext');
@@ -36,31 +35,39 @@ let galleryIndex = 0;
 
 function renderGallery(index) {
   galleryIndex = (index + galleryImages.length) % galleryImages.length;
-  const image = galleryImages[galleryIndex];
-
-  // Quick fade so the change is obvious even with placeholder text
-  galleryMain.classList.add('fading');
-  setTimeout(() => {
-    galleryMain.querySelector('img')?.remove();
-    if (image.src) {
-      const img = document.createElement('img');
-      img.src = image.src;
-      img.alt = image.label;
-      galleryMainLabel.style.display = 'none';
-      galleryMain.prepend(img);
-    } else {
-      galleryMainLabel.textContent = image.label;
-      galleryMainLabel.style.display = '';
-    }
-    galleryMain.classList.remove('fading');
-  }, 180);
+  galleryTrack.style.transform = `translateX(${-galleryIndex * 100}%)`;
 
   galleryThumbs.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
     thumb.classList.toggle('active', i === galleryIndex);
   });
 }
 
-if (galleryMain) {
+if (galleryTrack) {
+  // Build one slide per entry in galleryImages (real slide-sideways transition,
+  // not a fade -- see .gallery-track's transform transition in style.css)
+  galleryImages.forEach((image) => {
+    const slide = document.createElement('div');
+    slide.className = 'gallery-slide';
+    if (image.src) {
+      const img = document.createElement('img');
+      img.src = image.src;
+      img.alt = image.label;
+      slide.appendChild(img);
+    } else {
+      slide.insertAdjacentHTML('beforeend',
+        '<svg class="ph-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3 3.5-4.5L19 17H5l3.5-4.5z"/>' +
+        '<circle cx="8" cy="8.5" r="1.5"/></svg>'
+      );
+      const span = document.createElement('span');
+      span.textContent = image.label;
+      slide.appendChild(span);
+    }
+    galleryTrack.appendChild(slide);
+  });
+
+  const galleryViewport = galleryTrack.parentElement;
+
   // Auto-advance one slide at a time; any manual move resets the countdown
   // so it doesn't fight the button/swipe the visitor just used.
   const autoplayDelay = 4000;
@@ -83,18 +90,18 @@ if (galleryMain) {
   let dragStartX = null;
   const swipeThreshold = 40;
 
-  galleryMain.addEventListener('pointerdown', (e) => {
+  galleryViewport.addEventListener('pointerdown', (e) => {
     dragStartX = e.clientX;
-    galleryMain.setPointerCapture(e.pointerId);
+    galleryViewport.setPointerCapture(e.pointerId);
   });
-  galleryMain.addEventListener('pointerup', (e) => {
+  galleryViewport.addEventListener('pointerup', (e) => {
     if (dragStartX === null) return;
     const dx = e.clientX - dragStartX;
     dragStartX = null;
     if (dx > swipeThreshold) { renderGallery(galleryIndex - 1); resetAutoplay(); }
     else if (dx < -swipeThreshold) { renderGallery(galleryIndex + 1); resetAutoplay(); }
   });
-  galleryMain.addEventListener('pointercancel', () => { dragStartX = null; });
+  galleryViewport.addEventListener('pointercancel', () => { dragStartX = null; });
 }
 
 // Reviews: auto-scrolls on its own, but can also be dragged/swiped by hand.
