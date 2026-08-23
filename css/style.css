@@ -26,6 +26,7 @@ body{
   line-height:1.6;
 }
 img{ max-width:100%; display:block; }
+a, button{ -webkit-tap-highlight-color:transparent; }
 a{ color:inherit; }
 ul{ list-style:none; margin:0; padding:0; }
 
@@ -440,6 +441,7 @@ ul{ list-style:none; margin:0; padding:0; }
   transition:border-color .15s ease, color .15s ease, background .15s ease;
 }
 .gallery-nav:hover{ border-color:var(--red); color:var(--red); background:rgba(10,10,10,0.75); }
+.gallery-nav:active{ border-color:var(--red); color:var(--red); background:rgba(10,10,10,0.85); transform:translateY(-50%) scale(0.92); }
 .gallery-nav.prev{ inset-inline-start:12px; }
 .gallery-nav.next{ inset-inline-end:12px; }
 .gallery-thumbs{
