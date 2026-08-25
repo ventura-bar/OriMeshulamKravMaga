@@ -135,15 +135,18 @@ if (reviewsMarquee && reviewsTrack) {
     }
   }
 
+  // Only touch scrollLeft while nothing is actively dragging/touching it --
+  // iOS Safari cancels an in-progress touch-scroll gesture if scrollLeft is
+  // reassigned mid-gesture (e.g. from a 'scroll' listener firing on every
+  // touch-move), which was breaking touch swipe on the reviews entirely.
   function tick() {
     if (!isInteracting) {
       reviewsMarquee.scrollLeft -= autoScrollSpeed;
+      wrapReviewsScroll();
     }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
-
-  reviewsMarquee.addEventListener('scroll', wrapReviewsScroll);
 
   // Mouse drag
   reviewsMarquee.addEventListener('pointerdown', (e) => {
