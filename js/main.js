@@ -113,18 +113,33 @@ if (galleryTrack) {
 }
 
 // Reviews: auto-scrolls on its own, but can also be dragged/swiped by hand.
-// Content is duplicated in the HTML (see #reviewsTrack) so the scroll position
-// can wrap seamlessly for a true infinite loop, whether it moved by the
-// animation loop, a mouse drag, or native touch scrolling.
+// The 5 review cards in the HTML are cloned twice more here (3 copies
+// total) so the scroll position can wrap seamlessly for a true infinite
+// loop, with real content as a buffer on both sides of the visible window.
 const reviewsMarquee = document.querySelector('.reviews-marquee');
 const reviewsTrack = document.getElementById('reviewsTrack');
 
 if (reviewsMarquee && reviewsTrack) {
+  const originalCards = [...reviewsTrack.children];
+  for (let copy = 0; copy < 2; copy++) {
+    originalCards.forEach((card) => {
+      const clone = card.cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      reviewsTrack.appendChild(clone);
+    });
+  }
+
   let isInteracting = false;
   let isDragging = false;
   let dragStartX = 0;
   let scrollStart = 0;
   const autoScrollSpeed = 0.6; // px per frame
+
+  // One copy's width (3 copies total). Starting centered in the middle copy
+  // gives a full copy's worth of buffer on either side before a swipe could
+  // reach the real start/end of the track.
+  const unitWidth = reviewsTrack.scrollWidth / 3;
+  reviewsMarquee.scrollLeft = -unitWidth;
 
   // Safari rounds scrollLeft to a whole pixel on read, so repeatedly doing
   // scrollLeft -= 0.6 (reading the rounded value back each frame) never
@@ -136,20 +151,19 @@ if (reviewsMarquee && reviewsTrack) {
     autoPos = reviewsMarquee.scrollLeft;
   }
 
-  // Runs every frame regardless of interaction state -- safe on iOS because
-  // it's driven by requestAnimationFrame, not by a 'scroll' event handler.
-  // (The earlier touch-swipe breakage was specifically from mutating
-  // scrollLeft synchronously inside a 'scroll' listener, which fires on
-  // every touch-move; RAF isn't in that call stack.) Keeping this always-on
-  // is what stops a fast swipe from reaching the real end of the doubled
-  // content and showing a gap before snapping back.
+  // Only runs while nothing is being touched/dragged. Reading scrollLeft
+  // is a layout-dependent property, and polling it every frame *during* an
+  // active native touch-scroll competes with iOS's own scroll handling for
+  // that gesture -- it was throttling how far a swipe could actually move
+  // (a swipe barely moved the content at all). The content being tripled
+  // (not just doubled) means the real edge is far enough away that a
+  // normal swipe won't reach it before this catches up on release.
   function wrapReviewsScroll() {
-    const halfWidth = reviewsTrack.scrollWidth / 2;
-    if (reviewsMarquee.scrollLeft <= -halfWidth) {
-      reviewsMarquee.scrollLeft += halfWidth;
+    if (reviewsMarquee.scrollLeft <= -2 * unitWidth) {
+      reviewsMarquee.scrollLeft += unitWidth;
       syncAutoPos();
     } else if (reviewsMarquee.scrollLeft > 0) {
-      reviewsMarquee.scrollLeft -= halfWidth;
+      reviewsMarquee.scrollLeft -= unitWidth;
       syncAutoPos();
     }
   }
@@ -158,8 +172,8 @@ if (reviewsMarquee && reviewsTrack) {
     if (!isInteracting) {
       autoPos -= autoScrollSpeed;
       reviewsMarquee.scrollLeft = autoPos;
+      wrapReviewsScroll();
     }
-    wrapReviewsScroll();
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
