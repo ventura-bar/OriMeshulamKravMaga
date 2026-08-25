@@ -126,24 +126,40 @@ if (reviewsMarquee && reviewsTrack) {
   let scrollStart = 0;
   const autoScrollSpeed = 0.6; // px per frame
 
+  // Safari rounds scrollLeft to a whole pixel on read, so repeatedly doing
+  // scrollLeft -= 0.6 (reading the rounded value back each frame) never
+  // accumulates -- it looked like autoplay just didn't work in Safari.
+  // Tracking our own float position sidesteps that rounding entirely.
+  let autoPos = reviewsMarquee.scrollLeft;
+
+  function syncAutoPos() {
+    autoPos = reviewsMarquee.scrollLeft;
+  }
+
+  // Runs every frame regardless of interaction state -- safe on iOS because
+  // it's driven by requestAnimationFrame, not by a 'scroll' event handler.
+  // (The earlier touch-swipe breakage was specifically from mutating
+  // scrollLeft synchronously inside a 'scroll' listener, which fires on
+  // every touch-move; RAF isn't in that call stack.) Keeping this always-on
+  // is what stops a fast swipe from reaching the real end of the doubled
+  // content and showing a gap before snapping back.
   function wrapReviewsScroll() {
     const halfWidth = reviewsTrack.scrollWidth / 2;
     if (reviewsMarquee.scrollLeft <= -halfWidth) {
       reviewsMarquee.scrollLeft += halfWidth;
+      syncAutoPos();
     } else if (reviewsMarquee.scrollLeft > 0) {
       reviewsMarquee.scrollLeft -= halfWidth;
+      syncAutoPos();
     }
   }
 
-  // Only touch scrollLeft while nothing is actively dragging/touching it --
-  // iOS Safari cancels an in-progress touch-scroll gesture if scrollLeft is
-  // reassigned mid-gesture (e.g. from a 'scroll' listener firing on every
-  // touch-move), which was breaking touch swipe on the reviews entirely.
   function tick() {
     if (!isInteracting) {
-      reviewsMarquee.scrollLeft -= autoScrollSpeed;
-      wrapReviewsScroll();
+      autoPos -= autoScrollSpeed;
+      reviewsMarquee.scrollLeft = autoPos;
     }
+    wrapReviewsScroll();
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -165,6 +181,7 @@ if (reviewsMarquee && reviewsTrack) {
   const endMouseDrag = () => {
     isDragging = false;
     isInteracting = false;
+    syncAutoPos();
     reviewsMarquee.classList.remove('dragging');
   };
   reviewsMarquee.addEventListener('pointerup', endMouseDrag);
@@ -173,6 +190,6 @@ if (reviewsMarquee && reviewsTrack) {
 
   // Touch: pause auto-scroll while a finger is on it, resume on release
   reviewsMarquee.addEventListener('touchstart', () => { isInteracting = true; }, { passive: true });
-  reviewsMarquee.addEventListener('touchend', () => { isInteracting = false; }, { passive: true });
-  reviewsMarquee.addEventListener('touchcancel', () => { isInteracting = false; }, { passive: true });
+  reviewsMarquee.addEventListener('touchend', () => { isInteracting = false; syncAutoPos(); }, { passive: true });
+  reviewsMarquee.addEventListener('touchcancel', () => { isInteracting = false; syncAutoPos(); }, { passive: true });
 }

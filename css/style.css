@@ -495,6 +495,7 @@ ul{ list-style:none; margin:0; padding:0; }
   overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x;
+  overscroll-behavior-x:contain;
   cursor:grab;
   scrollbar-width:none;
   -webkit-mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
