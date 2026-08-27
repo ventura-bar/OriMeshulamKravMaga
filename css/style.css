@@ -539,6 +539,13 @@ ul{ list-style:none; margin:0; padding:0; }
   border:1px solid var(--line);
   border-radius:var(--radius);
   padding:28px 24px;
+  -webkit-user-select:none; /* Safari needs the prefix too -- unprefixed
+    user-select alone let text get highlighted mid-drag in WebKit even
+    though Chromium respected it fine. */
+  user-select:none;
+}
+.review-card *{
+  -webkit-user-select:none;
   user-select:none;
 }
 .review-stars{
