@@ -54,6 +54,15 @@ mainNav.querySelectorAll('a').forEach(link => {
     const slide = document.createElement('div');
     slide.className = 'gallery-slide';
     if (image.src) {
+      // Blurred backdrop copy (fills the frame) + the real photo on top,
+      // uncropped -- see .gallery-slide-bg in style.css for why.
+      const bg = document.createElement('img');
+      bg.className = 'gallery-slide-bg';
+      bg.src = image.src;
+      bg.alt = '';
+      bg.setAttribute('aria-hidden', 'true');
+      slide.appendChild(bg);
+
       const img = document.createElement('img');
       img.src = image.src;
       img.alt = image.alt || '';
@@ -113,7 +122,10 @@ mainNav.querySelectorAll('a').forEach(link => {
 
   galleryFrame.addEventListener('pointerdown', (e) => {
     dragStartX = e.clientX;
-    galleryFrame.setPointerCapture(e.pointerId);
+    // No setPointerCapture here: this logic only reads the down/up
+    // coordinates (no pointermove), and capturing the pointer to the frame
+    // was suppressing the prev/next buttons' native click synthesis for a
+    // real mouse click (the buttons are inside this same frame).
   });
   galleryFrame.addEventListener('pointerup', (e) => {
     if (dragStartX === null) return;
