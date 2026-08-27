@@ -1,0 +1,14 @@
+index.html
+  h_8b62cf3430f0da 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "eaa5708dc39bd7a924e409d70d2cec713efc3d9e",
+  "prompts": {},
+  "humans": {
+    "h_8b62cf3430f0da": {
+      "author": "Bar Ventura <bar090402@gmail.com>"
+    }
+  }
+}
