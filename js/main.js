@@ -179,11 +179,21 @@ mainNav.querySelectorAll('a').forEach(link => {
     return card;
   }
 
-  // 3 copies total (1 real + 2 hidden duplicates) so wrapping has a full
-  // copy's worth of buffer on each side.
-  for (let copy = 0; copy < 3; copy++) {
+  // Many copies (not just 2-3) so a real touch-scroll gesture can never
+  // physically reach the true start/end of the track. The wrap-correction
+  // below only runs while nothing is being touched (see wrapReviewsScroll),
+  // so during an active swipe the position isn't corrected in real time --
+  // with too few copies, a longer swipe session could still reach the real
+  // edge before release, showing genuine empty space (reported on iOS
+  // Safari: "not a loop after last one, it's empty"). Each copy is fairly
+  // cheap (9 short text cards, no images), so a generous buffer costs
+  // little.
+  const COPY_COUNT = 9;
+  const middleCopy = Math.floor(COPY_COUNT / 2);
+
+  for (let copy = 0; copy < COPY_COUNT; copy++) {
     reviews.forEach((review) => {
-      reviewsTrack.appendChild(buildCard(review, copy > 0));
+      reviewsTrack.appendChild(buildCard(review, copy !== middleCopy));
     });
   }
 
@@ -193,11 +203,10 @@ mainNav.querySelectorAll('a').forEach(link => {
   let scrollStart = 0;
   const autoScrollSpeed = 0.6; // px per frame
 
-  // One copy's width (3 copies total). Starting centered in the middle copy
-  // gives a full copy's worth of buffer on either side before a swipe could
-  // reach the real start/end of the track.
-  const unitWidth = reviewsTrack.scrollWidth / 3;
-  reviewsMarquee.scrollLeft = -unitWidth;
+  // One copy's width. Starting centered in the middle copy gives equal
+  // buffer on either side before a swipe could reach the real start/end.
+  const unitWidth = reviewsTrack.scrollWidth / COPY_COUNT;
+  reviewsMarquee.scrollLeft = -middleCopy * unitWidth;
 
   // Safari rounds scrollLeft to a whole pixel on read, so repeatedly doing
   // scrollLeft -= 0.6 (reading the rounded value back each frame) never
@@ -213,14 +222,18 @@ mainNav.querySelectorAll('a').forEach(link => {
   // is a layout-dependent property, and polling it every frame *during* an
   // active native touch-scroll competes with iOS's own scroll handling for
   // that gesture -- it was throttling how far a swipe could actually move
-  // (a swipe barely moved the content at all). The content being tripled
-  // (not just doubled) means the real edge is far enough away that a
-  // normal swipe won't reach it before this catches up on release.
+  // (a swipe barely moved the content at all). Keeps the position within a
+  // single unit-wide window around the middle copy, wrapping by exactly one
+  // unitWidth (seamless, since every copy is identical) whenever it drifts
+  // out -- the many extra copies on either side are what actually stop a
+  // real swipe from reaching the true edge before this runs on release.
+  const lowerBound = -(middleCopy + 1) * unitWidth;
+  const upperBound = -(middleCopy - 1) * unitWidth;
   function wrapReviewsScroll() {
-    if (reviewsMarquee.scrollLeft <= -2 * unitWidth) {
+    if (reviewsMarquee.scrollLeft <= lowerBound) {
       reviewsMarquee.scrollLeft += unitWidth;
       syncAutoPos();
-    } else if (reviewsMarquee.scrollLeft > 0) {
+    } else if (reviewsMarquee.scrollLeft > upperBound) {
       reviewsMarquee.scrollLeft -= unitWidth;
       syncAutoPos();
     }
