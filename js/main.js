@@ -271,6 +271,10 @@ mainNav.querySelectorAll('a').forEach(link => {
   let dragStart = null; // { x, y, panX, panY } for single-pointer drag
 
   lightboxViewport.addEventListener('pointerdown', (e) => {
+    // Record the real target now, before setPointerCapture retargets every
+    // subsequent event (including pointerup) to lightboxViewport regardless
+    // of what's actually under the pointer at release time.
+    const downOnBackdrop = e.target === lightboxViewport;
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     lightboxViewport.setPointerCapture(e.pointerId);
     if (activePointers.size === 2) {
@@ -279,7 +283,7 @@ mainNav.querySelectorAll('a').forEach(link => {
       pinchStartScale = scale;
       dragStart = null;
     } else if (activePointers.size === 1) {
-      dragStart = { x: e.clientX, y: e.clientY, panX, panY };
+      dragStart = { x: e.clientX, y: e.clientY, panX, panY, downOnBackdrop };
     }
   });
 
@@ -307,6 +311,10 @@ mainNav.querySelectorAll('a').forEach(link => {
 
   function endLightboxPointer(e) {
     const wasSingle = activePointers.size === 1 && dragStart;
+    // Pointer capture (set on pointerdown) retargets pointerup.target to
+    // lightboxViewport no matter where the pointer actually is, so we can't
+    // read e.target here -- use the target we recorded at pointerdown instead.
+    const clickedBackdrop = wasSingle && dragStart.downOnBackdrop;
     let swipeDx = 0;
     if (wasSingle) swipeDx = e.clientX - dragStart.x;
     activePointers.delete(e.pointerId);
@@ -316,9 +324,11 @@ mainNav.querySelectorAll('a').forEach(link => {
       // Not zoomed: a horizontal drag navigates instead of panning.
       if (swipeDx > 50) lightboxStep(-1);
       else if (swipeDx < -50) lightboxStep(1);
+      else if (clickedBackdrop) closeLightbox();
       else handleDoubleTap(e.clientX, e.clientY);
     } else if (wasSingle) {
-      handleDoubleTap(e.clientX, e.clientY);
+      if (clickedBackdrop && Math.abs(swipeDx) < 10) closeLightbox();
+      else handleDoubleTap(e.clientX, e.clientY);
     }
     dragStart = null;
   }
