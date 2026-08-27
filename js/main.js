@@ -14,38 +14,40 @@ mainNav.querySelectorAll('a').forEach(link => {
   });
 });
 
-// Gallery carousel
-// Replace `src: null` with the real image path once photos are ready
-// (e.g. { label: '** תמונת אימון 1 **', src: 'assets/gallery-1.jpg' })
-const galleryImages = [
-  { label: '** תמונת אימון 1 **', src: null },
-  { label: '** תמונת אימון 2 **', src: null },
-  { label: '** תמונת אימון 3 **', src: null },
-  { label: '** תמונת אימון 4 **', src: null },
-  { label: '** תמונת אימון 5 **', src: null },
-  { label: '** תמונת אימון 6 **', src: null },
-];
+// Gallery carousel -- images come from data/gallery.json so new photos can
+// be added there without touching this file.
+(async () => {
+  const galleryTrack = document.getElementById('galleryTrack');
+  if (!galleryTrack) return;
 
-const galleryTrack = document.getElementById('galleryTrack');
-const galleryThumbs = document.getElementById('galleryThumbs');
-const galleryPrev = document.getElementById('galleryPrev');
-const galleryNext = document.getElementById('galleryNext');
+  const galleryThumbs = document.getElementById('galleryThumbs');
+  const galleryPrev = document.getElementById('galleryPrev');
+  const galleryNext = document.getElementById('galleryNext');
 
-let galleryIndex = 0;
+  let galleryImages = [];
+  try {
+    const res = await fetch('data/gallery.json');
+    galleryImages = await res.json();
+  } catch (err) {
+    console.error('Failed to load gallery.json', err);
+    return;
+  }
+  if (!galleryImages.length) return;
 
-function renderGallery(index) {
-  galleryIndex = (index + galleryImages.length) % galleryImages.length;
-  // RTL flex row lays child 0 at the right (matching the viewport) and each
-  // next child further left, so bringing slide N into view means shifting
-  // the track right (positive), not left, unlike the equivalent LTR case.
-  galleryTrack.style.transform = `translateX(${galleryIndex * 100}%)`;
+  let galleryIndex = 0;
 
-  galleryThumbs.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
-    thumb.classList.toggle('active', i === galleryIndex);
-  });
-}
+  function renderGallery(index) {
+    galleryIndex = (index + galleryImages.length) % galleryImages.length;
+    // RTL flex row lays child 0 at the right (matching the viewport) and each
+    // next child further left, so bringing slide N into view means shifting
+    // the track right (positive), not left, unlike the equivalent LTR case.
+    galleryTrack.style.transform = `translateX(${galleryIndex * 100}%)`;
 
-if (galleryTrack) {
+    galleryThumbs.querySelectorAll('.gallery-thumb').forEach((thumb, i) => {
+      thumb.classList.toggle('active', i === galleryIndex);
+    });
+  }
+
   // Build one slide per entry in galleryImages (real slide-sideways transition,
   // not a fade -- see .gallery-track's transform transition in style.css)
   galleryImages.forEach((image) => {
@@ -54,7 +56,8 @@ if (galleryTrack) {
     if (image.src) {
       const img = document.createElement('img');
       img.src = image.src;
-      img.alt = image.label;
+      img.alt = image.alt || '';
+      img.loading = 'lazy';
       slide.appendChild(img);
     } else {
       slide.insertAdjacentHTML('beforeend',
@@ -63,10 +66,20 @@ if (galleryTrack) {
         '<circle cx="8" cy="8.5" r="1.5"/></svg>'
       );
       const span = document.createElement('span');
-      span.textContent = image.label;
+      span.textContent = image.alt || '';
       slide.appendChild(span);
     }
     galleryTrack.appendChild(slide);
+  });
+
+  // Build one dot per image (markup only has placeholders for a fixed count)
+  galleryThumbs.innerHTML = '';
+  galleryImages.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'gallery-thumb' + (i === 0 ? ' active' : '');
+    dot.setAttribute('data-index', String(i));
+    dot.setAttribute('aria-label', `עבור לתמונה ${i + 1}`);
+    galleryThumbs.appendChild(dot);
   });
 
   const galleryViewport = galleryTrack.parentElement;
@@ -110,22 +123,55 @@ if (galleryTrack) {
     else if (dx < -swipeThreshold) { renderGallery(galleryIndex + 1); resetAutoplay(); }
   });
   galleryFrame.addEventListener('pointercancel', () => { dragStartX = null; });
-}
+})();
 
 // Reviews: auto-scrolls on its own, but can also be dragged/swiped by hand.
-// The 5 review cards in the HTML are cloned twice more here (3 copies
-// total) so the scroll position can wrap seamlessly for a true infinite
-// loop, with real content as a buffer on both sides of the visible window.
-const reviewsMarquee = document.querySelector('.reviews-marquee');
-const reviewsTrack = document.getElementById('reviewsTrack');
+// Content comes from data/reviews.json, cloned into 3 copies here so the
+// scroll position can wrap seamlessly for a true infinite loop, with real
+// content as a buffer on both sides of the visible window.
+(async () => {
+  const reviewsMarquee = document.querySelector('.reviews-marquee');
+  const reviewsTrack = document.getElementById('reviewsTrack');
+  if (!reviewsMarquee || !reviewsTrack) return;
 
-if (reviewsMarquee && reviewsTrack) {
-  const originalCards = [...reviewsTrack.children];
-  for (let copy = 0; copy < 2; copy++) {
-    originalCards.forEach((card) => {
-      const clone = card.cloneNode(true);
-      clone.setAttribute('aria-hidden', 'true');
-      reviewsTrack.appendChild(clone);
+  let reviews = [];
+  try {
+    const res = await fetch('data/reviews.json');
+    reviews = await res.json();
+  } catch (err) {
+    console.error('Failed to load reviews.json', err);
+    return;
+  }
+  if (!reviews.length) return;
+
+  function buildCard(review, hidden) {
+    const card = document.createElement('div');
+    card.className = 'review-card';
+    if (hidden) card.setAttribute('aria-hidden', 'true');
+
+    const stars = document.createElement('div');
+    stars.className = 'review-stars';
+    stars.textContent = '★★★★★'.slice(0, review.stars || 5);
+    card.appendChild(stars);
+
+    const quote = document.createElement('p');
+    quote.className = 'review-quote';
+    quote.textContent = `"${review.quote}"`;
+    card.appendChild(quote);
+
+    const author = document.createElement('div');
+    author.className = 'review-author';
+    author.textContent = review.author || '';
+    card.appendChild(author);
+
+    return card;
+  }
+
+  // 3 copies total (1 real + 2 hidden duplicates) so wrapping has a full
+  // copy's worth of buffer on each side.
+  for (let copy = 0; copy < 3; copy++) {
+    reviews.forEach((review) => {
+      reviewsTrack.appendChild(buildCard(review, copy > 0));
     });
   }
 
@@ -206,4 +252,4 @@ if (reviewsMarquee && reviewsTrack) {
   reviewsMarquee.addEventListener('touchstart', () => { isInteracting = true; }, { passive: true });
   reviewsMarquee.addEventListener('touchend', () => { isInteracting = false; syncAutoPos(); }, { passive: true });
   reviewsMarquee.addEventListener('touchcancel', () => { isInteracting = false; syncAutoPos(); }, { passive: true });
-}
+})();
