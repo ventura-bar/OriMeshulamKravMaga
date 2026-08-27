@@ -271,7 +271,19 @@ mainNav.querySelectorAll('a').forEach(link => {
     if (!isDragging) return;
     reviewsMarquee.scrollLeft = scrollStart - (e.clientX - dragStartX);
   });
-  const endMouseDrag = () => {
+  // pointerType-gated, matching pointerdown: touch fires 'pointercancel'
+  // shortly after 'pointerdown' as soon as the browser recognizes the
+  // gesture as native panning (expected, spec-compliant behavior for an
+  // element with touch-action allowing that axis) -- an unguarded handler
+  // here was resetting isInteracting back to false ~20ms into every touch
+  // gesture, re-enabling the auto-scroll loop to fight the user's finger
+  // for the rest of the swipe. This was the real cause of "swipe barely
+  // moves anything" (auto-scroll and native touch-scroll both writing to
+  // scrollLeft every frame) and, at narrow/iPhone widths, of it feeling
+  // completely stuck (small net movement is imperceptible when a single
+  // card already fills most of the visible frame).
+  const endMouseDrag = (e) => {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
     isDragging = false;
     isInteracting = false;
     syncAutoPos();
