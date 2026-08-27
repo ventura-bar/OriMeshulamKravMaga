@@ -203,9 +203,17 @@ mainNav.querySelectorAll('a').forEach(link => {
   let scrollStart = 0;
   const autoScrollSpeed = 0.6; // px per frame
 
-  // One copy's width. Starting centered in the middle copy gives equal
-  // buffer on either side before a swipe could reach the real start/end.
-  const unitWidth = reviewsTrack.scrollWidth / COPY_COUNT;
+  // One copy's width. Deliberately NOT reviewsTrack.scrollWidth / COPY_COUNT:
+  // WebKit's scrollWidth on this flex container comes out far larger than
+  // the sum of its (correctly, individually 300px-wide) children whenever
+  // they contain long wrapping text -- confirmed by measuring every child's
+  // own getBoundingClientRect() (all exactly 300px) against scrollWidth
+  // (reported ~2.5x too large). Chromium doesn't have this bug, so the
+  // symptom only showed up in real Safari. Computing our own unit width
+  // from the known, reliably-measured card width sidesteps it entirely.
+  const cardWidth = reviewsTrack.children[0].getBoundingClientRect().width;
+  const trackGap = parseFloat(getComputedStyle(reviewsTrack).columnGap) || 18;
+  const unitWidth = reviews.length * (cardWidth + trackGap);
   reviewsMarquee.scrollLeft = -middleCopy * unitWidth;
 
   // Safari rounds scrollLeft to a whole pixel on read, so repeatedly doing
@@ -277,4 +285,23 @@ mainNav.querySelectorAll('a').forEach(link => {
   reviewsMarquee.addEventListener('touchstart', () => { isInteracting = true; }, { passive: true });
   reviewsMarquee.addEventListener('touchend', () => { isInteracting = false; syncAutoPos(); }, { passive: true });
   reviewsMarquee.addEventListener('touchcancel', () => { isInteracting = false; syncAutoPos(); }, { passive: true });
+
+  // Trackpad / mouse-wheel horizontal scroll (the normal way to scroll a
+  // horizontal element on a Mac -- a two-finger swipe, not a click-drag).
+  // This was never treated as "interacting" at all, so the RAF loop kept
+  // forcing scrollLeft back to its own auto-scroll position on every frame
+  // while a trackpad gesture was simultaneously trying to move it -- the
+  // two fought over scrollLeft 60 times a second. Wheel events don't have a
+  // clean start/end like pointer or touch events (they just stop firing
+  // when the gesture ends), so debounce: treat it as interacting for a
+  // short idle window after the last wheel event.
+  let wheelIdleTimer = null;
+  reviewsMarquee.addEventListener('wheel', () => {
+    isInteracting = true;
+    clearTimeout(wheelIdleTimer);
+    wheelIdleTimer = setTimeout(() => {
+      isInteracting = false;
+      syncAutoPos();
+    }, 150);
+  }, { passive: true });
 })();
