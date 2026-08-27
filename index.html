@@ -148,10 +148,25 @@
         <div class="gallery-track" id="galleryTrack"></div>
       </div>
       <button class="gallery-nav next" id="galleryNext" aria-label="התמונה הבאה">›</button>
+      <button class="gallery-zoom-btn" id="galleryZoomBtn" aria-label="הגדל תמונה">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0a4.5 4.5 0 110-9 4.5 4.5 0 010 9z"/><path d="M11 7h-1v3H7v1h3v3h1v-3h3V10h-3z"/></svg>
+      </button>
     </div>
     <div class="gallery-thumbs" id="galleryThumbs"></div>
   </div>
 </section>
+
+<!-- ============ GALLERY LIGHTBOX ============ -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lightboxClose" aria-label="סגור">&times;</button>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+  <button class="lightbox-nav prev" id="lightboxPrev" aria-label="התמונה הקודמת">‹</button>
+  <div class="lightbox-viewport" id="lightboxViewport">
+    <img class="lightbox-img" id="lightboxImg" src="" alt="" draggable="false">
+  </div>
+  <button class="lightbox-nav next" id="lightboxNext" aria-label="התמונה הבאה">›</button>
+  <div class="lightbox-hint">לחיצה כפולה או פינץ' להגדלה</div>
+</div>
 
 <!-- ============ REVIEWS ============ -->
 <section class="section" id="reviews">

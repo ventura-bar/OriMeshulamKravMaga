@@ -120,7 +120,17 @@ mainNav.querySelectorAll('a').forEach(link => {
   let dragStartX = null;
   const swipeThreshold = 40;
 
+  // Prev/next/zoom buttons float inside this same frame (on top of the
+  // image edges, a natural thumb-swipe starting point) and already have
+  // their own click handlers. A gesture that starts on one of them must
+  // still count as a swipe if it ends as one -- that's the whole reason
+  // this listens on the frame, not just the viewport -- but if it ends as
+  // a plain tap, it should be left entirely to the button's own click,
+  // not ALSO open the lightbox underneath it.
+  let startedOnButton = false;
+
   galleryFrame.addEventListener('pointerdown', (e) => {
+    startedOnButton = !!e.target.closest('.gallery-nav, .gallery-zoom-btn');
     dragStartX = e.clientX;
     // No setPointerCapture here: this logic only reads the down/up
     // coordinates (no pointermove), and capturing the pointer to the frame
@@ -133,8 +143,191 @@ mainNav.querySelectorAll('a').forEach(link => {
     dragStartX = null;
     if (dx > swipeThreshold) { renderGallery(galleryIndex - 1); resetAutoplay(); }
     else if (dx < -swipeThreshold) { renderGallery(galleryIndex + 1); resetAutoplay(); }
+    else if (!startedOnButton) { openLightbox(galleryIndex); } // a tap on the image, not a swipe
   });
   galleryFrame.addEventListener('pointercancel', () => { dragStartX = null; });
+
+  // ---------- Lightbox: full-screen zoom/pan viewer ----------
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxViewport = document.getElementById('lightboxViewport');
+  const lightboxClose = document.getElementById('lightboxClose');
+  const lightboxPrev = document.getElementById('lightboxPrev');
+  const lightboxNext = document.getElementById('lightboxNext');
+  const lightboxCounter = document.getElementById('lightboxCounter');
+  const galleryZoomBtn = document.getElementById('galleryZoomBtn');
+
+  let lightboxIndex = 0;
+  let scale = 1, panX = 0, panY = 0;
+  const MIN_SCALE = 1, MAX_SCALE = 4;
+
+  function applyTransform() {
+    lightboxImg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    lightboxImg.classList.toggle('panning', scale > 1);
+  }
+
+  function clampPan() {
+    // Don't let the image be dragged entirely out of view once zoomed.
+    const rect = lightboxViewport.getBoundingClientRect();
+    const maxX = (rect.width * (scale - 1)) / 2;
+    const maxY = (rect.height * (scale - 1)) / 2;
+    panX = Math.max(-maxX, Math.min(maxX, panX));
+    panY = Math.max(-maxY, Math.min(maxY, panY));
+  }
+
+  function setScale(newScale, originClientX, originClientY) {
+    const rect = lightboxViewport.getBoundingClientRect();
+    const cx = originClientX - (rect.left + rect.width / 2);
+    const cy = originClientY - (rect.top + rect.height / 2);
+    const clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+    // Keep the point under the cursor/fingers fixed while scaling.
+    const ratio = clamped / scale;
+    panX = cx - (cx - panX) * ratio;
+    panY = cy - (cy - panY) * ratio;
+    scale = clamped;
+    if (scale === MIN_SCALE) { panX = 0; panY = 0; }
+    clampPan();
+    applyTransform();
+  }
+
+  function updateLightboxImage() {
+    const image = galleryImages[lightboxIndex];
+    lightboxImg.src = image.src || '';
+    lightboxImg.alt = image.alt || '';
+    // <bdi> isolates just this text run's bidi direction so "1 / 20" doesn't
+    // reorder to "20 / 1" inside the page's RTL context -- unlike setting
+    // direction:ltr on the counter element itself, it doesn't also affect
+    // that element's own inset-inline-* positioning.
+    lightboxCounter.innerHTML = '';
+    const bdi = document.createElement('bdi');
+    bdi.textContent = `${lightboxIndex + 1} / ${galleryImages.length}`;
+    lightboxCounter.appendChild(bdi);
+    scale = 1; panX = 0; panY = 0;
+    applyTransform();
+  }
+
+  function openLightbox(index) {
+    lightboxIndex = index;
+    updateLightboxImage();
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    clearInterval(autoplayTimer); // don't keep advancing the carousel behind the lightbox
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    renderGallery(lightboxIndex); // keep the carousel in sync with what was viewed
+    resetAutoplay();
+  }
+
+  function lightboxStep(dir) {
+    lightboxIndex = (lightboxIndex + dir + galleryImages.length) % galleryImages.length;
+    updateLightboxImage();
+  }
+
+  galleryZoomBtn.addEventListener('click', () => openLightbox(galleryIndex));
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightboxPrev.addEventListener('click', () => lightboxStep(-1));
+  lightboxNext.addEventListener('click', () => lightboxStep(1));
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowRight') lightboxStep(1);
+    else if (e.key === 'ArrowLeft') lightboxStep(-1);
+  });
+
+  // Wheel to zoom (desktop), centered on the cursor.
+  lightboxViewport.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    setScale(scale - e.deltaY * 0.01, e.clientX, e.clientY);
+  }, { passive: false });
+
+  // Double-click / double-tap to toggle zoom. Implemented manually off
+  // pointerup timing (not the 'dblclick' event) so it behaves identically
+  // for mouse and touch.
+  let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+  function handleDoubleTap(x, y) {
+    const now = Date.now();
+    const isDouble = now - lastTapTime < 350 && Math.hypot(x - lastTapX, y - lastTapY) < 30;
+    lastTapTime = isDouble ? 0 : now;
+    lastTapX = x; lastTapY = y;
+    if (isDouble) {
+      setScale(scale > MIN_SCALE ? MIN_SCALE : 2.5, x, y);
+    }
+    return isDouble;
+  }
+
+  // Unified pointer handling: single pointer pans when zoomed in or swipes
+  // to the next/prev photo when not; two pointers pinch-zoom. touch-action
+  // is fully disabled on this element (see CSS), so the browser never takes
+  // over these gestures itself -- unlike the reviews marquee, there's no
+  // native scrolling here to conflict with.
+  const activePointers = new Map();
+  let pinchStartDist = 0, pinchStartScale = 1;
+  let dragStart = null; // { x, y, panX, panY } for single-pointer drag
+
+  lightboxViewport.addEventListener('pointerdown', (e) => {
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    lightboxViewport.setPointerCapture(e.pointerId);
+    if (activePointers.size === 2) {
+      const pts = [...activePointers.values()];
+      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartScale = scale;
+      dragStart = null;
+    } else if (activePointers.size === 1) {
+      dragStart = { x: e.clientX, y: e.clientY, panX, panY };
+    }
+  });
+
+  lightboxViewport.addEventListener('pointermove', (e) => {
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activePointers.size === 2) {
+      const pts = [...activePointers.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      if (pinchStartDist > 0) setScale(pinchStartScale * (dist / pinchStartDist), midX, midY);
+    } else if (activePointers.size === 1 && dragStart) {
+      const dx = e.clientX - dragStart.x;
+      const dy = e.clientY - dragStart.y;
+      if (scale > MIN_SCALE) {
+        panX = dragStart.panX + dx;
+        panY = dragStart.panY + dy;
+        clampPan();
+        applyTransform();
+      }
+    }
+  });
+
+  function endLightboxPointer(e) {
+    const wasSingle = activePointers.size === 1 && dragStart;
+    let swipeDx = 0;
+    if (wasSingle) swipeDx = e.clientX - dragStart.x;
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) pinchStartDist = 0;
+
+    if (wasSingle && scale === MIN_SCALE) {
+      // Not zoomed: a horizontal drag navigates instead of panning.
+      if (swipeDx > 50) lightboxStep(-1);
+      else if (swipeDx < -50) lightboxStep(1);
+      else handleDoubleTap(e.clientX, e.clientY);
+    } else if (wasSingle) {
+      handleDoubleTap(e.clientX, e.clientY);
+    }
+    dragStart = null;
+  }
+  lightboxViewport.addEventListener('pointerup', endLightboxPointer);
+  lightboxViewport.addEventListener('pointercancel', () => {
+    activePointers.clear();
+    pinchStartDist = 0;
+    dragStart = null;
+  });
 })();
 
 // Reviews: auto-scrolls on its own, but can also be dragged/swiped by hand.
