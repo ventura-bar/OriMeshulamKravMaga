@@ -28,7 +28,7 @@ if (heroVideo) {
   // the native play button instead -- retry on the first touch/click
   // anywhere on the page once that happens.
   const tryPlay = () => heroVideo.play();
-  tryPlay().catch(() => {
+  const armResumeOnInteraction = () => {
     const resumeOnInteraction = () => {
       tryPlay().catch(() => {});
       document.removeEventListener('touchstart', resumeOnInteraction);
@@ -36,6 +36,16 @@ if (heroVideo) {
     };
     document.addEventListener('touchstart', resumeOnInteraction, { once: true });
     document.addEventListener('click', resumeOnInteraction, { once: true });
+  };
+  tryPlay().catch(armResumeOnInteraction);
+
+  // Mobile browsers pause background video when the tab/app is backgrounded
+  // and don't resume it on their own -- resume manually when it comes back,
+  // falling back to the tap-to-resume path if that's still blocked.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && heroVideo.paused) {
+      tryPlay().catch(armResumeOnInteraction);
+    }
   });
 }
 
