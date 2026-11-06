@@ -1,0 +1,19 @@
+js/main.js
+  s_bf9e5adfb413f2::t_26b5ed0745f5c0 23-24,26-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "38767162fd344d347e7e438927bd1fb6f2eb9b21",
+  "prompts": {},
+  "sessions": {
+    "s_bf9e5adfb413f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9978e3f6-196f-4834-bd1a-ad3afd499299",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Bar Ventura <bar090402@gmail.com>"
+    }
+  }
+}
