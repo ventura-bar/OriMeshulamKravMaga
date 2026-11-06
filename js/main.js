@@ -20,6 +20,7 @@ const heroVideo = document.getElementById('heroVideo');
 if (heroVideo) {
   const isDesktop = window.matchMedia('(min-width: 641px)').matches;
   heroVideo.src = isDesktop ? 'assets/hero-video-desktop.mp4' : 'assets/hero-video-mobile.mp4';
+  heroVideo.poster = isDesktop ? 'assets/hero-poster-desktop.jpg' : 'assets/hero-poster-mobile.jpg';
   heroVideo.muted = true;
   heroVideo.playsInline = true;
   heroVideo.load();
