@@ -39,16 +39,22 @@ if (heroVideo) {
   };
   tryPlay().catch(armResumeOnInteraction);
 
-  // Mobile browsers pause/stall background video when the tab/app is
-  // backgrounded and don't reliably resume it on their own. iOS in
-  // particular: app-switching doesn't always fire visibilitychange, and
-  // .paused can still read false even though the frame is visually frozen
-  // (a decoder-stall quirk) -- so resume unconditionally on every signal
-  // that we might be back, rather than gating on .paused.
+  // Mobile Safari can evict a backgrounded tab's decoded video buffer
+  // entirely (not just pause it) when memory is reclaimed -- a plain
+  // play() call then does nothing, since the underlying resource needs to
+  // be re-fetched. Force a full reload of the element before replaying,
+  // and only skip it when the video is clearly still fine (currentTime
+  // actually advancing) to avoid an unnecessary restart-from-zero flash
+  // on every ordinary tab switch.
   const resumeFromBackground = () => {
     if (document.visibilityState !== 'visible') return;
-    heroVideo.pause();
-    tryPlay().catch(armResumeOnInteraction);
+    const timeBefore = heroVideo.currentTime;
+    setTimeout(() => {
+      const stillAdvancing = !heroVideo.paused && heroVideo.currentTime !== timeBefore;
+      if (stillAdvancing) return;
+      heroVideo.load();
+      tryPlay().catch(armResumeOnInteraction);
+    }, 150);
   };
   document.addEventListener('visibilitychange', resumeFromBackground);
   window.addEventListener('pageshow', resumeFromBackground);
