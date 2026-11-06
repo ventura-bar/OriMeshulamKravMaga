@@ -14,6 +14,16 @@ mainNav.querySelectorAll('a').forEach(link => {
   });
 });
 
+// Hero background video -- picked via JS instead of <source media>, since
+// Safari doesn't reliably support responsive source selection on <video>.
+const heroVideo = document.getElementById('heroVideo');
+if (heroVideo) {
+  const isDesktop = window.matchMedia('(min-width: 641px)').matches;
+  heroVideo.src = isDesktop ? 'assets/hero-video-desktop.mp4' : 'assets/hero-video-mobile.mp4';
+  heroVideo.load();
+  heroVideo.play().catch(() => {});
+}
+
 // Gallery carousel -- images come from data/gallery.json so new photos can
 // be added there without touching this file.
 (async () => {

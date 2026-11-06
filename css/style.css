@@ -144,6 +144,8 @@ ul{ list-style:none; margin:0; padding:0; }
 .hero{
   position:relative;
   overflow:hidden;
+  isolation:isolate;
+  z-index:0;
   min-height:calc(100vh - 81px);
   display:flex;
   align-items:center;
@@ -158,6 +160,7 @@ ul{ list-style:none; margin:0; padding:0; }
   height:100%;
   object-fit:cover;
   z-index:0;
+  pointer-events:none;
 }
 .hero-overlay{
   position:absolute;
