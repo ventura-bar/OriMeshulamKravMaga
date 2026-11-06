@@ -74,7 +74,7 @@ if (heroVideo) {
   let galleryImages = [];
   try {
     const res = await fetch('data/gallery.json');
-    galleryImages = await res.json();
+    galleryImages = (await res.json()).photos;
   } catch (err) {
     console.error('Failed to load gallery.json', err);
     return;
@@ -399,7 +399,7 @@ if (heroVideo) {
   let reviews = [];
   try {
     const res = await fetch('data/reviews.json');
-    reviews = await res.json();
+    reviews = (await res.json()).reviews;
   } catch (err) {
     console.error('Failed to load reviews.json', err);
     return;

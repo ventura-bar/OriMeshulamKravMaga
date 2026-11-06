@@ -1,0 +1,46 @@
+backend:
+  name: github
+  repo: ventura-bar/OriMeshulamKravMaga
+  branch: main
+  # Replace with your deployed sveltia-cms-auth Worker URL once set up,
+  # e.g. https://sveltia-cms-auth.<your-subdomain>.workers.dev
+  base_url: https://REPLACE-WITH-YOUR-AUTH-WORKER.workers.dev
+
+media_folder: "assets/om-gallery"
+public_folder: "assets/om-gallery"
+
+locale: "he"
+
+collections:
+  - name: "gallery"
+    label: "גלריה"
+    files:
+      - name: "gallery"
+        label: "תמונות גלריה"
+        file: "data/gallery.json"
+        fields:
+          - name: "photos"
+            label: "תמונות"
+            widget: "list"
+            label_singular: "תמונה"
+            summary: "{{alt}}"
+            fields:
+              - { name: "src", label: "תמונה", widget: "image" }
+              - { name: "alt", label: "תיאור (לנגישות)", widget: "string" }
+
+  - name: "reviews"
+    label: "ביקורות"
+    files:
+      - name: "reviews"
+        label: "רשימת ביקורות"
+        file: "data/reviews.json"
+        fields:
+          - name: "reviews"
+            label: "ביקורות"
+            widget: "list"
+            label_singular: "ביקורת"
+            summary: "{{author}} — {{quote}}"
+            fields:
+              - { name: "stars", label: "כוכבים", widget: "number", min: 1, max: 5, value_type: "int" }
+              - { name: "quote", label: "תוכן הביקורת", widget: "text" }
+              - { name: "author", label: "מקור / תפקיד", widget: "string" }
