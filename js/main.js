@@ -20,8 +20,23 @@ const heroVideo = document.getElementById('heroVideo');
 if (heroVideo) {
   const isDesktop = window.matchMedia('(min-width: 641px)').matches;
   heroVideo.src = isDesktop ? 'assets/hero-video-desktop.mp4' : 'assets/hero-video-mobile.mp4';
+  heroVideo.muted = true;
+  heroVideo.playsInline = true;
   heroVideo.load();
-  heroVideo.play().catch(() => {});
+
+  // iOS blocks autoplay outright in Low Power Mode (even muted), showing
+  // the native play button instead -- retry on the first touch/click
+  // anywhere on the page once that happens.
+  const tryPlay = () => heroVideo.play();
+  tryPlay().catch(() => {
+    const resumeOnInteraction = () => {
+      tryPlay().catch(() => {});
+      document.removeEventListener('touchstart', resumeOnInteraction);
+      document.removeEventListener('click', resumeOnInteraction);
+    };
+    document.addEventListener('touchstart', resumeOnInteraction, { once: true });
+    document.addEventListener('click', resumeOnInteraction, { once: true });
+  });
 }
 
 // Gallery carousel -- images come from data/gallery.json so new photos can
