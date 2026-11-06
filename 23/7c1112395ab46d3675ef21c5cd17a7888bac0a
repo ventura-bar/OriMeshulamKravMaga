@@ -1,0 +1,22 @@
+index.html
+  s_bf9e5adfb413f2::t_87ce0d3b2e2d14 30,58,182,193
+  s_bf9e5adfb413f2::t_bb76c60b50b6b7 46-48
+css/style.css
+  s_bf9e5adfb413f2::t_c1ac74b6b2e4b4 151-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "237c1112395ab46d3675ef21c5cd17a7888bac0a",
+  "prompts": {},
+  "sessions": {
+    "s_bf9e5adfb413f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9978e3f6-196f-4834-bd1a-ad3afd499299",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Bar Ventura <bar090402@gmail.com>"
+    }
+  }
+}
