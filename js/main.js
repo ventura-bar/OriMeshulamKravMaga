@@ -39,16 +39,15 @@ if (heroVideo) {
   };
   tryPlay().catch(armResumeOnInteraction);
 
-  // Mobile Safari can evict a backgrounded tab's decoded video buffer
-  // entirely (not just pause it) when memory is reclaimed -- a plain
-  // play() call then does nothing, since the underlying resource needs to
-  // be re-fetched. Force a full reload of the element before replaying,
-  // and only skip it when the video is clearly still fine (currentTime
-  // actually advancing) to avoid an unnecessary restart-from-zero flash
-  // on every ordinary tab switch.
+  // Try the cheap fix first (just play() -- instant, covers an ordinary
+  // pause from backgrounding). Only escalate to a full reload if that
+  // didn't actually get it advancing again, which means iOS evicted the
+  // backgrounded tab's decoded video buffer entirely rather than just
+  // pausing it, and the underlying resource needs to be re-fetched.
   const resumeFromBackground = () => {
     if (document.visibilityState !== 'visible') return;
     const timeBefore = heroVideo.currentTime;
+    tryPlay().catch(() => {});
     setTimeout(() => {
       const stillAdvancing = !heroVideo.paused && heroVideo.currentTime !== timeBefore;
       if (stillAdvancing) return;
