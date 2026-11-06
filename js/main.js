@@ -39,14 +39,20 @@ if (heroVideo) {
   };
   tryPlay().catch(armResumeOnInteraction);
 
-  // Mobile browsers pause background video when the tab/app is backgrounded
-  // and don't resume it on their own -- resume manually when it comes back,
-  // falling back to the tap-to-resume path if that's still blocked.
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && heroVideo.paused) {
-      tryPlay().catch(armResumeOnInteraction);
-    }
-  });
+  // Mobile browsers pause/stall background video when the tab/app is
+  // backgrounded and don't reliably resume it on their own. iOS in
+  // particular: app-switching doesn't always fire visibilitychange, and
+  // .paused can still read false even though the frame is visually frozen
+  // (a decoder-stall quirk) -- so resume unconditionally on every signal
+  // that we might be back, rather than gating on .paused.
+  const resumeFromBackground = () => {
+    if (document.visibilityState !== 'visible') return;
+    heroVideo.pause();
+    tryPlay().catch(armResumeOnInteraction);
+  };
+  document.addEventListener('visibilitychange', resumeFromBackground);
+  window.addEventListener('pageshow', resumeFromBackground);
+  window.addEventListener('focus', resumeFromBackground);
 }
 
 // Gallery carousel -- images come from data/gallery.json so new photos can
