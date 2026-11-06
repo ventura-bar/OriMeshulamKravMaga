@@ -2,9 +2,7 @@ backend:
   name: github
   repo: ventura-bar/OriMeshulamKravMaga
   branch: main
-  # Replace with your deployed sveltia-cms-auth Worker URL once set up,
-  # e.g. https://sveltia-cms-auth.<your-subdomain>.workers.dev
-  base_url: https://REPLACE-WITH-YOUR-AUTH-WORKER.workers.dev
+  base_url: https://sveltia-cms-auth.bar090402.workers.dev
 
 media_folder: "assets/om-gallery"
 public_folder: "assets/om-gallery"
