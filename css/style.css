@@ -144,7 +144,7 @@ ul{ list-style:none; margin:0; padding:0; }
 .hero{
   position:relative;
   overflow:hidden;
-  min-height:100vh;
+  min-height:calc(100vh - 81px);
   display:flex;
   align-items:center;
   padding:110px 0 90px;
@@ -201,6 +201,10 @@ ul{ list-style:none; margin:0; padding:0; }
 }
 .hero-actions .btn{
   min-width:230px;
+  min-height:62px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   text-align:center;
 }
 
@@ -734,6 +738,9 @@ ul{ list-style:none; margin:0; padding:0; }
 }
 
 @media (max-width: 640px){
+  .hero{
+    min-height:calc(100vh - 69px);
+  }
   .hero h1{
     font-size:clamp(20px, 6.8vw, 44px);
   }
