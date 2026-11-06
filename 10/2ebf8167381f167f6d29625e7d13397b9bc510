@@ -1,0 +1,21 @@
+index.html
+  s_bf9e5adfb413f2::t_0df6935f63ffe5 46
+js/main.js
+  s_bf9e5adfb413f2::t_1fc1e1736db902 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "102ebf8167381f167f6d29625e7d13397b9bc510",
+  "prompts": {},
+  "sessions": {
+    "s_bf9e5adfb413f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9978e3f6-196f-4834-bd1a-ad3afd499299",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Bar Ventura <bar090402@gmail.com>"
+    }
+  }
+}
